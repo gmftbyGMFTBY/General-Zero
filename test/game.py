@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
 import pprint, random
-from rule import AIPlayer
+from AIPlayer import RULEPlayer
+
+red_stay = [(0, 0, 3), (1, 0, 5), (2, 0, 6), (0, 1, 1), (1, 1, 4), (0, 2, 2)]
+blue_stay = [(4, 4, 3), (4, 3, 1), (4, 2, 2), (3, 4, 5), (3, 3, 4), (2, 4, 6)]
 
 class board:
     def __init__(self, red_pieces, blue_pieces, start_player=0):
@@ -21,6 +24,7 @@ class board:
         self.turn = self.start_player = start_player
         self.red_lm = [(0, 1), (1, 0), (1, 1)]
         self.blue_lm = [(-1, 0), (0, -1), (-1, -1)]
+        self.red_number = self.blue_number = 6
         self.point = -1
 
     def set_start(self, s):
@@ -34,6 +38,8 @@ class board:
         for p_index, piece in self.pieces.items():
             if piece[0] == dx and piece[1] == dy:
                 del self.pieces[p_index]
+                if p_index > 0: self.red_number -= 1
+                elif p_index < 0: self.blue_number -= 1
                 break
 
         for p_index, piece in self.pieces.items():
@@ -127,10 +133,8 @@ class game:
         players = {player1_color: player1, player2_color: player2}
         if is_show: self.show()
         while True:
-            if self.board.turn == 0: 
-                print('-------------------\nRed player play ...')
-            else:
-                print('-------------------\nBlue player play ...')
+            if self.board.turn == 0: print('-------------------\nRed player play ...')
+            else: print('-------------------\nBlue player play ...')
             self.board.get_point()
             player_in_turn = players[self.board.turn]
             move = player_in_turn.get_action(self.board)
@@ -172,6 +176,5 @@ class Human:
 
 
 if __name__ == "__main__":
-    g = game([(0, 0, 1), (0, 1, 2), (0, 2, 3), (1, 0, 4), (1, 1, 5), (2, 0, 6)], \
-    [(4, 4, 1), (4, 3, 2), (4, 2, 3), (3, 4, 4), (3, 3, 5), (2, 4, 6)], 0)
-    g.start_play(Human(), Human(), 0, 1)
+    g = game(red_stay, blue_stay, 0)
+    g.start_play(Human(), RULEPlayer(), 0, 1)
