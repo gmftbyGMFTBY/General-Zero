@@ -95,21 +95,30 @@ class RULEPlayer:
             if self.color == 0: 
                 ava_move = [(x, y, dx, dy) for x, y, dx, dy in ava_move if (dx, dy) not in blue_pieces]
                 distance = [self.red_map[dx][dy] for x, y, dx, dy in ava_move]
-                left_move = []
-                for index, dis in enumerate(distance):
-                    if dis == min(distance):
-                        left_move.append(ava_move[index])
-                if len(left_move) == 1: return left_move[0]
-                else:
-                    # 选择较为安全的走子方案，统计(dx, dy)位置敌方走子的数目
-                    pass
-            else: 
+            else:
                 ava_move = [(x, y, dx, dy) for x, y, dx, dy in ava_move if (dx, dy) not in red_pieces]
                 distance = [self.blue_map[dx][dy] for x, y, dx, dy in ava_move]
-                return min(ava_move, key = lambda x: self.blue_map[x[3]][x[2]])
+            left_move = []
+            for index, dis in enumerate(distance):
+                if dis == min(distance):
+                    left_move.append(ava_move[index])
+            if len(left_move) == 1: return left_move[0]
+            else:
+                # 选择较为安全的走子方案，统计棋局信息,考虑当我方棋子数目不多的时候避免吃掉我放弃自的15中情况考虑
+                maxscore, bestmove = -2000, None
+                for move in left_move:
+                    score = self.just_move(move)
+                    if score > maxscore: 
+                        maxscore = score
+                        bestmove = move
+                return bestmove
         else:
             # 大多数情况的判断，这时候一般需要使用蒙特卡洛算法进行大量模拟判断
-            return (4,4,3,3)
+            # make the score for the mcts
+            pass 
+
+    def just_move(self, move, red_pieces, blue_pieces, red_lm, blue_lm):
+        pass
 
     def get_action(self, board):
         # the main function for this AIPlayer
