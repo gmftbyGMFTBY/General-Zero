@@ -2,6 +2,10 @@
 # Author: GMFTBY
 # Time  : 2018.7.7
 
+'''
+Can use tkinter to rewrite this `run` function
+'''
+
 from game import Game, Board
 from alphazero_mcts import MCTSPlayer
 from policy_value_net import PolicyValueNet

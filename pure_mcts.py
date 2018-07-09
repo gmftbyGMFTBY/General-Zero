@@ -1,14 +1,26 @@
 #!/usr/bin/python3
 # Author: GMFTBY
-# Time  : 2018.7.7
+# Time  : 2018.7.9
 
 import numpy as np
-import copy, pprint, ipdb
+import copy
+from operator import itemgetter
 
-def softmax(x):
-    probs = np.exp(x - np.max(x))
-    probs /= np.sum(probs)
-    return probs
+
+def rollout_policy_fn(board):
+    """a coarse, fast version of policy_fn used in the rollout phase."""
+    # rollout randomly
+    moves, true_moves = board.get_avaiable_moves()
+    action_probs = np.random.rand(len(moves))
+    return zip(true_moves, action_probs)
+
+def policy_value_fn(board):
+    """a function that takes in a state and outputs a list of (action, probability)
+    tuples and a score for the state"""
+    # return uniform probabilities and 0 score for pure MCTS
+    moves, true_moves = board.get_avaiable_moves()
+    action_probs = np.ones(len(moves)) / len(moves)
+    return zip(true_moves, action_probs), 0
 
 class TreeNode:
     """
@@ -114,68 +126,70 @@ class MCTS:
         state is a board instance from the game.py file.
         """
         node = self._root
-        # ipdb.set_trace()
-        while True:
+        while(1):
             is_leaf, action_node = node.select(state, self._c_puct)
             if is_leaf: break
             state.do_move(action_node[0])
             node = action_node[1]
 
-        # Evaluate the leaf using a network which outputs a list of
-        # (action, probability) tuples p and also a score v in [-1, 1]
-        # for the `current player`.
-
-        action_probs, leaf_value = self._policy(state)
-        # Check for end of game.
+        # value is useless here
+        action_probs, _ = self._policy(state)
+        # Check for end of game
         end, winner = state.if_win()
         if not end:
             node.expand(action_probs, state.point)
-        else:
-            leaf_value = 1.0 if winner == state.turn else -1.0
-
+        # Evaluate the leaf node by random rollout
+        leaf_value = self._evaluate_rollout(state)
         # Update value and visit count of nodes in this traversal.
         node.update_recursive(-leaf_value)
 
-    def get_move_probs(self, state, temp=1e-3):
+    def _evaluate_rollout(self, state, limit=1000):
         """
-        Run all playouts sequentially and return the available actions and
-        their corresponding probabilities.
+        Use the rollout policy to play until the end of the game,
+        returning +1 if the current player wins, -1 if the opponent wins,
+        and 0 if it is a tie.
+        """
+        player = state.turn
+        for i in range(limit):
+            end, winner = state.if_win()
+            if end: break
+            action_probs = rollout_policy_fn(state)
+            max_action = max(action_probs, key=itemgetter(1))[0]
+            state.do_move(max_action)
+        else:
+            # If no break from the loop, issue a warning.
+            print("WARNING: rollout reached move limit")
+        return 1 if winner == player else -1
+
+    def get_move(self, state):
+        """Runs all playouts sequentially and returns the most visited action.
         state: the current game state
-        temp: temperature parameter in (0, 1] controls the level of exploration
+
+        Return: the selected action
         """
-        for _ in range(self._n_playout):
+        for n in range(self._n_playout):
             state_copy = copy.deepcopy(state)
             self._playout(state_copy)
-
-        # calc the move probabilities based on visit counts at the root node
-        act_visits = [(act, node._n_visits)
-                      for act, node in self._root._children[state.point].items()]
-        acts, visits = zip(*act_visits)
-        # different from the paper
-        act_probs = softmax(1.0 / temp * np.log(np.array(visits) + 1e-10))
-
-        return acts, act_probs
+        return max(self._root._children[state.point].items(),
+                   key=lambda act_node: act_node[1]._n_visits)[0]
 
     def update_with_move(self, point, last_move):
         """
         Step forward in the tree, keeping everything we already know
         about the subtree.
         """
-        if point == -1:
-            # reset the tree
-            self._root = TreeNode(None, 1.0)
-        else:
+        if last_move in self._root._children[point]:
             self._root = self._root._children[point][last_move]
             self._root._parent = None
+        else:
+            # reset the Tree
+            self._root = TreeNode(None, 1.0)
 
 
-class MCTSPlayer:
+class MCTSPlayer(object):
     """AI player based on MCTS"""
-
-    def __init__(self, policy_value_function,
-                 c_puct=5, n_playout=2000, is_selfplay=0):
-        self.mcts = MCTS(policy_value_function, c_puct, n_playout)
-        self._is_selfplay = is_selfplay
+    def __init__(self, c_puct=5, n_playout=2000):
+        self.mcts = MCTS(policy_value_fn, c_puct, n_playout)
 
     def set_color(self, color):
         self.color = color
@@ -183,27 +197,8 @@ class MCTSPlayer:
     def reset_player(self):
         self.mcts.update_with_move(-1, -1)
 
-    def get_action(self, board, temp=1e-3, return_prob = 0):
-        # get the point for the turn
+    def get_action(self, board):
         board.get_point()
-        acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
-        if self._is_selfplay:
-            # add Dirichlet Noise for exploration (needed for
-            # self-play training)
-            move = np.random.choice(
-                acts,
-                p = 0.75 * probs + 0.25 * np.random.dirichlet(0.3 * np.ones(len(probs)))
-            )
-            # update the root node and reuse the search tree
-            self.mcts.update_with_move(board.point, move)
-        else:
-            # with the default temp=1e-3, it is almost equivalent
-            # to choosing the move with the highest prob
-            move = np.random.choice(acts, p = probs)
-            # reset the root node
-            self.mcts.update_with_move(-1, -1)
-            # location = board.move_to_location(move)
-            # print("AI move: %d,%d\n" % (location[0], location[1]))
-
-        if return_prob: return move, probs
-        else: return move
+        move = self.mcts.get_move(board)
+        self.mcts.update_with_move(-1)
+        return move

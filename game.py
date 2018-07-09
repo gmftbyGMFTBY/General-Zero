@@ -4,7 +4,7 @@
 
 import numpy as np
 from collections import deque
-import random
+import random, ipdb
 
 class Board:
     def __init__(self):
@@ -28,12 +28,57 @@ class Board:
                                  3130, 3221, 3222, 3231, 3322, 3323, 3332, 3423, 3424, 3433, 4030,
                                  4130, 4131, 4140, 4231, 4232, 4241, 4332, 4333, 4342, 4433, 4434, 4443]
 
+    def get_avaiable_moves(self):
+        # Use after get the point
+        pieces = self.get_avaiable_pieces()
+        moves = []
+        true_moves = []
+        if self.turn == 1:
+            # red point moves
+            for piece in pieces:
+                # get the position of the piece
+                x, y = -1, -1
+                getted = False
+                for i in range(5):
+                    for j in range(5):
+                        if self.map[i][j] == piece:
+                            x, y = i, j
+                            getted = True
+                            break
+                    if getted: break
+                for dx, dy in [(1, 1), (1, 0), (0, 1)]:
+                    move = self.location_to_move((x, y, x + dx, y + dy))
+                    if move in self.red_legal_moves: 
+                        moves.append(self.red_legal_moves.index(move))
+                        true_moves.append(move)
+                    else: continue
+        else:
+            # blue point moves
+            for piece in pieces:
+                # get the position of the piece
+                x, y = -1, -1
+                getted = False
+                for i in range(5):
+                    for j in range(5):
+                        if self.map[i][j] == -piece:
+                            x, y = i, j
+                            getted = True
+                            break
+                    if getted: break
+                for dx, dy in [(-1, -1), (-1, 0), (0, -1)]:
+                    move = self.location_to_move((x, y, x + dx, y + dy))
+                    if move in self.blue_legal_moves: 
+                        moves.append(self.blue_legal_moves.index(move))
+                        true_moves.append(move)
+                    else: continue
+        return moves, true_moves
+
     def init_board(self, start_player = 1, red_pieces = None, blue_pieces = None):
         # default red first
         # default red_pieces: [(0, 0, 3), (0, 1, 5), (0, 2, 6), (1, 0, 1), (1, 1, 4), (2, 0, 2)]
         # default bluepieces: [(4, 4, 3), (3, 4, 5), (2, 4, 6), (4, 3, 1), (3, 3, 4), (4, 2, 2)]
         self.turn = self.first = start_player
-        self.movements = {}
+        self.movements = []
         self.map = [[0, 0, 0, 0, 0] for _ in range(5)]
         self.red_pieces = [1, 2, 3, 4, 5, 6]
         self.blue_pieces = [1, 2, 3, 4, 5, 6]
@@ -46,7 +91,7 @@ class Board:
         for x, y, index in red_pieces:
             self.map[x][y] = index
         for x, y, index in blue_pieces:
-            self.map[x][y] = -index    # blue pieces' index is negative, different from the red pieces
+            self.map[x][y] = - index    # blue pieces' index is negative, different from the red pieces
 
     def get_point(self, point = None):
         # get the point function get called in get_action or MCTS search function
@@ -98,13 +143,16 @@ class Board:
 
     def get_current_state(self):
         # before call this function, need to get the self.point
-        # 3 * 5 * 5: current board, last move, 
+        # 4 * 5 * 5: current board, last move, 
         #   move pieces (container the information about the current player)
-        state = np.zeros((3, self.width, self.height))
+        #   current player: 1 red, 2 blue
+        state = np.zeros((4, self.width, self.height))
         state[0] = self.map
         # last move
-        lx, ly, ldx, ldy = self.move_to_location(self.movements[-1])
-        state[1][ldx, ldy], state[1][lx, ly] = 1, 1
+        if len(self.movements) != 0: 
+            # if movements is empty, do not exec
+            lx, ly, ldx, ldy = self.move_to_location(self.movements[-1])
+            state[1][ldx, ldy], state[1][lx, ly] = 1, 1
         # move pieces
         pieces = self.get_avaiable_pieces()
         for piece in pieces:
@@ -112,6 +160,9 @@ class Board:
                 for j in range(5):
                     if piece == self.map[i][j]:
                         state[2][i, j] = 1
+                        
+        if self.turn == 1: state[3][:, :] = 1.0
+        elif self.turn == 2: state[3][:, :] = 2.0
         
         return state
 
@@ -120,12 +171,10 @@ class Board:
         self.turn = 2 if self.turn == 1 else 1
         # change the map and may change pieces in the borad
         bx, by, dx, dy = self.move_to_location(move)
-        for i in range(5):
-            for j in range(5):
-                if self.map[dx][dy] > 0: self.red_pieces.remove(self.map[dx][dy])
-                elif self.map[dx][dy] < 0: self.blue_pieces.remove(self.map[dx,dy])
-                self.map[dx][dy] = self.map[bx][by]
-                self.map[bx][by] = 0
+        if self.map[dx][dy] > 0: self.red_pieces.remove(self.map[dx][dy])
+        elif self.map[dx][dy] < 0: self.blue_pieces.remove(-self.map[dx][dy])
+        self.map[dx][dy] = self.map[bx][by]
+        self.map[bx][by] = 0
 
     def if_win(self):
         if len(self.red_pieces) == 0: return True, 2    # blue win
@@ -184,7 +233,7 @@ class Game:
             current_players.append(self.board.turn)
 
             self.board.do_move(move)
-            if is_shown: self.show()
+            if is_show: self.show()
             end, winner = self.board.if_win()
             if end:
                 # game end, collect the data for training
