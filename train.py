@@ -27,7 +27,7 @@ class TrainPipeline():
         self.learn_rate = 0.001
         self.lr_multiplier = 1.0  # adaptively adjust the learning rate based on KL
         self.temp = 1.0 # the temperature param
-        self.n_playout = 400 # num of simulations for each move
+        self.n_playout = 1500 # num of simulations for each move
         self.c_puct = 5
         self.buffer_size = 10000
         self.batch_size = 128 # mini-batch size for training
@@ -35,8 +35,8 @@ class TrainPipeline():
         self.play_batch_size = 1 
         self.epochs = 5 # num of train_steps for each update
         self.kl_targ = 0.02
-        self.check_freq = 10
-        self.game_batch_num = 1500
+        self.check_freq = 100
+        self.game_batch_num = 5000
         self.best_win_ratio = 0.0
         # num of simulations used for the pure mcts, which is used as the opponent to evaluate the trained policy
         self.pure_mcts_playout_num = 3000
@@ -103,12 +103,14 @@ class TrainPipeline():
             
             print(("kl: {:.3f}, "
                    "lr_multiplier: {:.3f}\n"
+                   "last loss: {:.3f}, "
                    "mean loss: {:.3f}, "
                    "mean entropy: {:.3f}\n"
                    "explained old: {:.3f}, "
                    "explained new: {:.3f}\n"
                    ).format(kl,
                             self.lr_multiplier,
+                            loss_list[-1],
                             np.mean(loss_list),
                             np.mean(entropy_list),
                             explained_var_old,
@@ -140,7 +142,7 @@ class TrainPipeline():
                 print("game", i, 'start ...')
                 bt = time.time()
                 self.collect_selfplay_data(self.play_batch_size)
-                print('game', i, 'cost', int(time.time() - bt))
+                print('game', i, 'cost', int(time.time() - bt), 's')
              
                 if len(self.data_buffer) > self.batch_size:
                     print("#### batch i:{} ####\n".format(i + 1))

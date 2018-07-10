@@ -7,8 +7,8 @@ Can use tkinter to rewrite this `run` function
 '''
 
 from game import Game, Board
-# from alphazero_mcts import MCTSPlayer
-from pure_mcts import MCTSPlayer
+from alphazero_mcts import MCTSPlayer
+# from pure_mcts import MCTSPlayer
 from policy_value_net import PolicyValueNet
 
 class Human:
@@ -36,11 +36,10 @@ class Human:
 def run():
     # play the chess with human
     game = Game()
-    # get the training param
-    # ...
     
-    # best_policy = PolicyValueNet(width, height, policy_param)
-    mctsplayer = MCTSPlayer(c_puct = 5, n_playout = 500)
+    best_policy = PolicyValueNet(5, 5)
+    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 1500)
+    # mctsplayer = MCTSPlayer(c_puct = 5, n_playout=500)
     human = Human()
     
     # human first, red

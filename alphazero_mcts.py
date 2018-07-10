@@ -142,6 +142,8 @@ class MCTS:
         their corresponding probabilities.
         state: the current game state
         temp: temperature parameter in (0, 1] controls the level of exploration
+
+        2018.7.10: try to use multiprocessing to parallel this function
         """
         for _ in range(self._n_playout):
             state_copy = copy.deepcopy(state)
@@ -173,7 +175,7 @@ class MCTSPlayer:
     """AI player based on MCTS"""
 
     def __init__(self, policy_value_function,
-                 c_puct=5, n_playout=2000, is_selfplay=0):
+                 c_puct=5, n_playout=5000, is_selfplay=0):
         self.mcts = MCTS(policy_value_function, c_puct, n_playout)
         self._is_selfplay = is_selfplay
         self.name = "alphazero"
@@ -184,9 +186,18 @@ class MCTSPlayer:
     def reset_player(self):
         self.mcts.update_with_move(-1, -1)
 
+    def oppo_go_down_tree(self, point, move):
+        if not self.mcts._root._children:
+            # begin chess and the mcts is empty, do not exec
+            return
+        # this function collect the alphazero's oppo move, and renew the mcts
+        # print("collect the oppo point and move", point, move)
+        self.mcts.update_with_move(point, move)
+
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turn
         board.get_point()
+        # print(board.point)
         acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
 
         # create the size 56 mcts_probs

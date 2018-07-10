@@ -209,8 +209,8 @@ class Game:
         if is_show == 1: 
             self.show()
         while True:
-            if self.board.turn == 1: print('-------------------\nRed player play ...')
-            else: print('-------------------\nBlue player play ...')
+            # if self.board.turn == 1: print('-------------------\nRed player play ...')
+            # else: print('-------------------\nBlue player play ...')
             player_in_turn = players[self.board.turn]
 
             # get_action must call the get_point function
@@ -220,7 +220,10 @@ class Game:
             if player_in_turn.name != 'alphazero':
                 # the human or the pure mcts play turn
                 alphazero_player = players[1] if player_in_turn.color == 2 else players[2]
-                alphazero_player.
+                if alphazero_player.name != 'alphazero': 
+                    # both of the player are not alphazero
+                    pass
+                else: alphazero_player.oppo_go_down_tree(self.board.point, move)
                 
             self.board.do_move(move)
 
