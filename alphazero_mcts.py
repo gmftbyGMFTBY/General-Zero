@@ -3,7 +3,7 @@
 # Time  : 2018.7.7
 
 import numpy as np
-import copy, pprint, ipdb
+import copy, pprint
 
 def softmax(x):
     probs = np.exp(x - np.max(x))
@@ -176,6 +176,7 @@ class MCTSPlayer:
                  c_puct=5, n_playout=2000, is_selfplay=0):
         self.mcts = MCTS(policy_value_function, c_puct, n_playout)
         self._is_selfplay = is_selfplay
+        self.name = "alphazero"
 
     def set_color(self, color):
         self.color = color
@@ -187,6 +188,13 @@ class MCTSPlayer:
         # get the point for the turn
         board.get_point()
         acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
+
+        # create the size 56 mcts_probs
+        move_probs = np.zeros(56)
+        for id, act in enumerate(acts):
+            if board.turn == 1: move_probs[board.red_legal_moves.index(act)] = probs[id]
+            else: move_probs[board.blue_legal_moves.index(act)] = probs[id]
+
         if self._is_selfplay:
             # add Dirichlet Noise for exploration (needed for
             # self-play training)
@@ -201,9 +209,11 @@ class MCTSPlayer:
             # to choosing the move with the highest prob
             move = np.random.choice(acts, p = probs)
             # reset the root node
-            self.mcts.update_with_move(-1, -1)
-            # location = board.move_to_location(move)
-            # print("AI move: %d,%d\n" % (location[0], location[1]))
+            # self.mcts.update_with_move(-1, -1)
+            
+            # do not reset the tree, otherwise try to save the tree for the mctsplayer
+            # this is not enough, also need to move from the human side
+            self.mcts.update_with_move(board.point, move)
 
-        if return_prob: return move, probs
+        if return_prob: return move, move_probs
         else: return move

@@ -4,7 +4,7 @@
 
 import numpy as np
 from collections import deque
-import random, ipdb
+import random
 
 class Board:
     def __init__(self):
@@ -198,22 +198,32 @@ class Game:
 
     def start_play(self, player1, player2, player1_color, player2_color, start_player, is_show = 1):
         # default show for human
+        # this function for the human-alphazero and alphazero-puremcts
+        # for alphazerp, but both of them need to save the tree when they chess with each other
         if start_player not in [1, 2]:
             raise Exception('First player must be 1(red) or 2(blue) !')
-        self.boad.init_board(start_player)
+        self.board.init_board(start_player)
         player1.set_color(player1_color)
         player2.set_color(player2_color)
         players = {player1_color: player1, player2_color: player2}
         if is_show == 1: 
             self.show()
         while True:
-            if self.board.turn == 0: print('-------------------\nRed player play ...')
+            if self.board.turn == 1: print('-------------------\nRed player play ...')
             else: print('-------------------\nBlue player play ...')
             player_in_turn = players[self.board.turn]
 
             # get_action must call the get_point function
             move = player_in_turn.get_action(self.board)    # the move is the integar
+
+            # alphazero collect oppo's movement
+            if player_in_turn.name != 'alphazero':
+                # the human or the pure mcts play turn
+                alphazero_player = players[1] if player_in_turn.color == 2 else players[2]
+                alphazero_player.
+                
             self.board.do_move(move)
+
             if is_show: 
                 self.show()
             end, winner = self.board.if_win()

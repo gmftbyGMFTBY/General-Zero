@@ -2,7 +2,7 @@
 # Author: GMFTBY
 # Time  : 2018.7.9
 
-import random
+import random, time, ipdb
 import numpy as np
 
 from collections import defaultdict
@@ -15,7 +15,7 @@ from alphazero_mcts import MCTSPlayer
 
 import os
 # choose second GPU to train
-# os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 class TrainPipeline():
     def __init__(self):
@@ -35,8 +35,8 @@ class TrainPipeline():
         self.play_batch_size = 1 
         self.epochs = 5 # num of train_steps for each update
         self.kl_targ = 0.02
-        self.check_freq = 1000
-        self.game_batch_num = 100000
+        self.check_freq = 10
+        self.game_batch_num = 1500
         self.best_win_ratio = 0.0
         # num of simulations used for the pure mcts, which is used as the opponent to evaluate the trained policy
         self.pure_mcts_playout_num = 3000
@@ -61,12 +61,13 @@ class TrainPipeline():
         update the policy-value net
         verbose to show more details of the training steps, default not show
         """
+        # ipdb.set_trace()
         mini_batch = random.sample(self.data_buffer, self.batch_size)
         state_batch = [data[0] for data in mini_batch]
         mcts_probs_batch = [data[1] for data in mini_batch]
         winner_batch = [data[2] for data in mini_batch]            
         
-        old_probs, old_v = self.policy_value_net.get_policy_value(state_batch)
+        old_probs, old_v = self.policy_value_net.policy_value(state_batch)
         
         loss_list = []
         entropy_list = []
@@ -74,12 +75,12 @@ class TrainPipeline():
             loss, entropy = self.policy_value_net.train_step(state_batch, 
                                              mcts_probs_batch, 
                                              winner_batch,
-                                             self.learn_rate*self.lr_multiplier)
+                                             self.learn_rate * self.lr_multiplier)
             
             loss_list.append(loss)
             entropy_list.append(entropy)
             
-            new_probs, new_v = self.policy_value_net.get_policy_value(state_batch)
+            new_probs, new_v = self.policy_value_net.policy_value(state_batch)
             kl = np.mean(np.sum(old_probs * (
                     np.log(old_probs + 1e-10) - np.log(new_probs + 1e-10)),
                     axis=1)
@@ -124,7 +125,7 @@ class TrainPipeline():
         win_cnt = defaultdict(int)
         for i in range(n_games):
             # alphazero always red, but change the first player in the game 
-            winner = self.game.start_play(current_mcts_player, pure_mcts_player, 1, 2, start_player= (i % 2) + 1, is_shown=0)
+            winner = self.game.start_play(current_mcts_player, pure_mcts_player, 1, 2, start_player= (i % 2) + 1, is_show=0)
             print("winner is {}".format(winner))
             win_cnt[winner] += 1
         # 计算红方(alphazero)的胜率
@@ -137,19 +138,21 @@ class TrainPipeline():
         try:
             for i in range(self.game_batch_num):  
                 print("game", i, 'start ...')
+                bt = time.time()
                 self.collect_selfplay_data(self.play_batch_size)
+                print('game', i, 'cost', int(time.time() - bt))
              
                 if len(self.data_buffer) > self.batch_size:
-                    print("#### batch i:{}, episode_len:{} ####\n".format(i+1, self.episode_len))
-                    for i in range(5):
-                        verbose = i % 5 == 0
+                    print("#### batch i:{} ####\n".format(i + 1))
+                    for vi in range(5):
+                        verbose = vi % 5 == 0
                         self.policy_update(verbose)         
 
                 # check the performance of the current model，and save the model params
                 # every 1000 check once
                 if (i+1) % self.check_freq == 0:
                     print("current self-play batch: {}".format(i+1))
-                    self.policy_value_net.saver.save(self.policy_value_net.sess, self.policy_value_net.model_file)
+                    self.policy_value_net.saver.save(self.policy_value_net.session, self.policy_value_net.model_file)
                     win_ratio = self.policy_evaluate()
                     print('*****win ration: {:.2f}%\n'.format(win_ratio*100))
                     
@@ -157,15 +160,15 @@ class TrainPipeline():
                         print("New best policy!!!!!!!!")
                         self.best_win_ratio = win_ratio
                         # save the model
-                        self.policy_value_net.saver.save(self.policy_value_net.sess, self.policy_value_net.model_file) # update the best_policy
+                        self.policy_value_net.saver.save(self.policy_value_net.session, self.policy_value_net.model_file) # update the best_policy
                         if self.best_win_ratio == 1.0 and self.pure_mcts_playout_num < 5000:
                             self.pure_mcts_playout_num += 100
                             self.best_win_ratio = 0.0
         except KeyboardInterrupt:
             # save before quit
-            self.policy_value_net.saver.save(self.policy_value_net.sess, self.policy_value_net.model_file)
+            self.policy_value_net.saver.save(self.policy_value_net.session, self.policy_value_net.model_file)
             print('quit, Bye !')
     
 if __name__ == '__main__':
     training_pipeline = TrainPipeline()
-    training_pipeline.run()    
+    training_pipeline.run()

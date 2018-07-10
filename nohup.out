@@ -1,0 +1,10 @@
+]0;IPython: File/General-ZeroWARNING:tensorflow:From /home/lantian/File/General-Zero/policy_value_net.py:88: softmax_cross_entropy_with_logits (from tensorflow.python.ops.nn_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+
+Future major versions of TensorFlow will allow gradients to flow
+into the labels input on backprop by default.
+
+See @{tf.nn.softmax_cross_entropy_with_logits_v2}.
+
+2018-07-10 10:21:07.968841: I tensorflow/core/platform/cpu_feature_guard.cc:140] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+INFO:tensorflow:Restoring parameters from ./model/tf_policy_WTN_model

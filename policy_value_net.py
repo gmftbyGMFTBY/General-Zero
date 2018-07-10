@@ -125,6 +125,7 @@ class PolicyValueNet():
                 [self.action_fc, self.evaluation_fc2],
                 feed_dict={self.input_states: state_batch}
                 )
+        # act_probs: 56, valule: 1
         act_probs = np.exp(log_act_probs)
         return act_probs, value
 
@@ -159,6 +160,7 @@ class PolicyValueNet():
         if os.path.exists(self.model_file + '.meta'):
             # restore the model into the sess
             self.saver.restore(self.session, self.model_file)
+            print("restore the lastest model ...")
         else:
             # do not exist the model file, try to init all the variable and prepare to train
             self.session.run(tf.global_variables_initializer())

@@ -178,18 +178,19 @@ class MCTS:
         Step forward in the tree, keeping everything we already know
         about the subtree.
         """
-        if last_move in self._root._children[point]:
+        if point == -1:
+            # reset the tree
+            self._root = TreeNode(None, 1.0)
+        else:
             self._root = self._root._children[point][last_move]
             self._root._parent = None
-        else:
-            # reset the Tree
-            self._root = TreeNode(None, 1.0)
 
 
 class MCTSPlayer(object):
     """AI player based on MCTS"""
     def __init__(self, c_puct=5, n_playout=2000):
         self.mcts = MCTS(policy_value_fn, c_puct, n_playout)
+        self.name = "puremcts"
 
     def set_color(self, color):
         self.color = color
@@ -200,5 +201,5 @@ class MCTSPlayer(object):
     def get_action(self, board):
         board.get_point()
         move = self.mcts.get_move(board)
-        self.mcts.update_with_move(-1)
+        self.mcts.update_with_move(-1, -1)
         return move
