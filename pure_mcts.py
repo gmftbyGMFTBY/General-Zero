@@ -159,6 +159,7 @@ class MCTS:
         else:
             # If no break from the loop, issue a warning.
             print("WARNING: rollout reached move limit")
+            return -1
         return 1 if winner == player else -1
 
     def get_move(self, state):

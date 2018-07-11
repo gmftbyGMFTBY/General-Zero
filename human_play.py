@@ -8,7 +8,7 @@ Can use tkinter to rewrite this `run` function
 
 from game import Game, Board
 from alphazero_mcts import MCTSPlayer
-# from pure_mcts import MCTSPlayer
+from pure_mcts import MCTSPlayer as PURE
 from policy_value_net import PolicyValueNet
 
 class Human:
@@ -37,13 +37,23 @@ def run():
     # play the chess with human
     game = Game()
     
+    # log, the model for training 1500 is suck, maybe the value is not prepared and need to be
+    # trained more times - 2018.7.11
     best_policy = PolicyValueNet(5, 5)
-    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 1500)
-    # mctsplayer = MCTSPlayer(c_puct = 5, n_playout=500)
+    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 3000)
+    puremctsplayer = PURE(c_puct = 5, n_playout = 3000)
     human = Human()
     
     # human first, red
-    game.start_play(human, mctsplayer, 1, 2, 1)
+    win = {1: 0, 2: 0}
+    for i in range(10):
+        winner = game.start_play(puremctsplayer, mctsplayer, 1, 2, (i % 2 + 1), is_show=1)
+        if winner == 1: win[1] += 1
+        else: win[2] += 1
+        print('winner is', 'red' if winner == 1 else 'blue')
+    print('win rating ...', win[2] / 10)
+    
+    # game.start_play(human, mctsplayer, 1, 2, 1, is_show=1)
 
 if __name__ == "__main__":
     run()

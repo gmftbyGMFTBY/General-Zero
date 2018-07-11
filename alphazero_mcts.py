@@ -167,9 +167,11 @@ class MCTS:
             # reset the tree
             self._root = TreeNode(None, 1.0)
         else:
-            self._root = self._root._children[point][last_move]
-            self._root._parent = None
-
+            if last_move in self._root._children:
+                self._root = self._root._children[point][last_move]
+                self._root._parent = None
+            else:
+                self._root = TreeNode(None, 1.0)
 
 class MCTSPlayer:
     """AI player based on MCTS"""
@@ -197,7 +199,7 @@ class MCTSPlayer:
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turn
         board.get_point()
-        # print(board.point)
+        print(board.point)
         acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
 
         # create the size 56 mcts_probs

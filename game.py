@@ -183,11 +183,19 @@ class Board:
         elif self.map[0][0] < 0: return True, 2         # blue win
         return False, None
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.pixel_x = 30 + 30 * self.x
+        self.pixel_y = 30 + 30 * self.y
+
 class Game:
     def __init__(self):
         self.board = Board()
     
     def show(self):
+        # terminal
         print('     0  1  2  3  4  Y')
         for i in range(5):
             print(' ', i, end='')
@@ -224,7 +232,7 @@ class Game:
                     # both of the player are not alphazero
                     pass
                 else: alphazero_player.oppo_go_down_tree(self.board.point, move)
-                
+
             self.board.do_move(move)
 
             if is_show: 

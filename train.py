@@ -27,7 +27,7 @@ class TrainPipeline():
         self.learn_rate = 0.001
         self.lr_multiplier = 1.0  # adaptively adjust the learning rate based on KL
         self.temp = 1.0 # the temperature param
-        self.n_playout = 1500 # num of simulations for each move
+        self.n_playout = 500 # num of simulations for each move
         self.c_puct = 5
         self.buffer_size = 10000
         self.batch_size = 128 # mini-batch size for training
@@ -122,7 +122,7 @@ class TrainPipeline():
         Evaluate the trained policy by playing games against the pure MCTS player
         Note: this is only for monitoring the progress of training
         """
-        current_mcts_player = MCTSPlayer(self.policy_value_net.policy_value_fn, c_puct=self.c_puct, n_playout=self.n_playout)
+        current_mcts_player = MCTSPlayer(self.policy_value_net.policy_value_fn, c_puct=self.c_puct, n_playout=3000)
         pure_mcts_player = MCTS_Pure(c_puct=5, n_playout=self.pure_mcts_playout_num)
         win_cnt = defaultdict(int)
         for i in range(n_games):
