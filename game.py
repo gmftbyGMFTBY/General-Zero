@@ -4,7 +4,7 @@
 
 import numpy as np
 from collections import deque
-import random
+import random, time
 
 class Board:
     def __init__(self):
@@ -12,6 +12,7 @@ class Board:
         self.width = self.height = 5
         self.point = -1
         self.movements = []    # save the procedure of the game
+        self.points = []
         self.first = -1        # first player in the game (red - 1, blue - 2)
         self.turn  = -1        # the current player
         self.map   = [[0, 0, 0, 0, 0] for _ in range(5)]
@@ -78,7 +79,7 @@ class Board:
         # default red_pieces: [(0, 0, 3), (0, 1, 5), (0, 2, 6), (1, 0, 1), (1, 1, 4), (2, 0, 2)]
         # default bluepieces: [(4, 4, 3), (3, 4, 5), (2, 4, 6), (4, 3, 1), (3, 3, 4), (4, 2, 2)]
         self.turn = self.first = start_player
-        self.movements = []
+        self.points, self.movements = [], []
         self.map = [[0, 0, 0, 0, 0] for _ in range(5)]
         self.red_pieces = [1, 2, 3, 4, 5, 6]
         self.blue_pieces = [1, 2, 3, 4, 5, 6]
@@ -87,6 +88,9 @@ class Board:
             red_pieces = [(0, 0, 3), (0, 1, 5), (0, 2, 6), (1, 0, 1), (1, 1, 4), (2, 0, 2)]
         if not blue_pieces:
             blue_pieces = [(4, 4, 3), (3, 4, 5), (2, 4, 6), (4, 3, 1), (3, 3, 4), (4, 2, 2)]
+        
+        # for log
+        self.mine_pos, self.oppo_pos = red_pieces, blue_pieces
 
         for x, y, index in red_pieces:
             self.map[x][y] = index
@@ -100,6 +104,7 @@ class Board:
         else: 
             self.point = random.randint(1, 6)
             # print("Point is", self.point)
+        self.points.append(self.point)
 
     def move_to_location(self, move):
         # move is a integar, refer to the self.red_legal_moves
@@ -183,13 +188,6 @@ class Board:
         elif self.map[0][0] < 0: return True, 2         # blue win
         return False, None
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.pixel_x = 30 + 30 * self.x
-        self.pixel_y = 30 + 30 * self.y
-
 class Game:
     def __init__(self):
         self.board = Board()
@@ -239,8 +237,33 @@ class Game:
                 self.show()
             end, winner = self.board.if_win()
             if end:
+                self.write_log(players[start_player].name, players[1 if start_player == 2 else 2].name,\
+                        players[winner].name)
                 if is_show: print('red win' if winner == 1 else 'blue win')
                 return winner
+        
+    def write_log(self, first_name, second_name, winner):
+        # this function when the start_play end and write the log according to the new rule of the game
+        filename = './chess_log/WTN-' + first_name + '-' + second_name + '-' + winner + '-' + '-'.join(time.asctime().split()) + '-' + '2018CCGC'
+        with open(filename, 'w') as f:
+            f.write(filename)
+            f.write('\n')
+            f.write('R: ')
+            for x, y, index in self.board.mine_pos:
+                x, y = 5 - x, chr(65 + y)
+                f.write(y + str(x) + '-' + str(index) + ';')
+            f.write('\n')
+            f.write('B: ')
+            for x, y, index in self.board.oppo_pos:
+                x, y = 5 - x, chr(65 + y)
+                f.write(y + str(x) + '-' + str(index) + ';')
+            f.write('\n')
+            i = 1
+            for move, point in zip(self.board.movements, self.board.points):
+                x, y, dx, dy = self.board.move_to_location(move)
+                x, y, dx, dy = 5 - x, chr(65 + y), 5 - dx, chr(65 + dy)
+                f.write(str(i) + ':' + str(point) + ';(' + y + str(x) + ',' + dy + str(dx) + ')\n')
+                i += 1
 
     def start_self_play(self, player, is_show = 0, temp = 1e-3):
         # play with itself (AIPlayer), default not show

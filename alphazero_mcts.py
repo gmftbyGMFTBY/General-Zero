@@ -199,7 +199,7 @@ class MCTSPlayer:
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turn
         board.get_point()
-        print(board.point)
+        # print(board.point)
         acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
 
         # create the size 56 mcts_probs

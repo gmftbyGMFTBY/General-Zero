@@ -43,7 +43,7 @@ def run():
     mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 3000)
     puremctsplayer = PURE(c_puct = 5, n_playout = 3000)
     human = Human()
-    
+    '''
     # human first, red
     win = {1: 0, 2: 0}
     for i in range(10):
@@ -52,8 +52,8 @@ def run():
         else: win[2] += 1
         print('winner is', 'red' if winner == 1 else 'blue')
     print('win rating ...', win[2] / 10)
-    
-    # game.start_play(human, mctsplayer, 1, 2, 1, is_show=1)
+    '''
+    game.start_play(human, mctsplayer, 1, 2, 1, is_show=1)
 
 if __name__ == "__main__":
     run()
