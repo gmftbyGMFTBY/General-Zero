@@ -196,10 +196,47 @@ class MCTSPlayer:
         # print("collect the oppo point and move", point, move)
         self.mcts.update_with_move(point, move)
 
+    def haveto(self, board):
+        move_index, moves = board.get_avaiable_moves()
+        # one step to win
+        for move in moves:
+            bx, by, dx, dy = board.move_to_location(move)
+            if board.turn == 1:
+                if dx == 4 and dy == 4: return move
+                if len(board.blue_pieces) == 1 and board.map[dx][dy] < 0: return move
+            elif board.turn == 2:
+                if dx == 0 and dy == 0: return move
+                if len(board.red_pieces) == 1 and board.map[dx][dy] > 0: return move
+
+        # one step to lose
+        for move in moves:
+            bx, by, dx, dy = board.move_to_location(move)
+            if board.turn == 1:
+                if board.map[dx][dy] < 0:
+                    if dx == 1 and dy == 1: return move
+                    elif dx == 1 and dy == 0: return move
+                    elif dx == 0 and dy == 1: return move
+            elif board.turn == 2:
+                if board.map[dx][dy] > 0:
+                    if dx == 3 and dy == 3: return move
+                    elif dx == 3 and dy == 4: return move
+                    elif dx == 4 and dy == 3: return move
+
+        return None
+
     def get_action(self, board, temp=1e-3, return_prob = 0):
-        # get the point for the turn
+        # get the point for the turns
         board.get_point()
         # print(board.point)
+        # ipdb.set_trace()
+
+        # have to 
+        move = self.haveto(board)
+        if move:
+            print('Have to function has been activated !')
+            if return_prob: return move, 1
+            else: return move
+
         acts, probs = self.mcts.get_move_probs(board, temp)    # 获得确定的点数下的走法及其对应的概率
 
         # create the size 56 mcts_probs

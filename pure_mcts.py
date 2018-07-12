@@ -201,6 +201,7 @@ class MCTSPlayer(object):
 
     def get_action(self, board):
         board.get_point()
+        print(board.point)
         move = self.mcts.get_move(board)
         self.mcts.update_with_move(-1, -1)
         return move

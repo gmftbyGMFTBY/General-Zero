@@ -40,11 +40,12 @@ def run():
     # log, the model for training 1500 is suck, maybe the value is not prepared and need to be
     # trained more times - 2018.7.11
     best_policy = PolicyValueNet(5, 5)
-    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 3000)
+    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 6000)
     puremctsplayer = PURE(c_puct = 5, n_playout = 3000)
     human = Human()
-    '''
+   
     # human first, red
+    '''
     win = {1: 0, 2: 0}
     for i in range(10):
         winner = game.start_play(puremctsplayer, mctsplayer, 1, 2, (i % 2 + 1), is_show=1)
@@ -52,6 +53,12 @@ def run():
         else: win[2] += 1
         print('winner is', 'red' if winner == 1 else 'blue')
     print('win rating ...', win[2] / 10)
+    '''
+    '''
+    import time
+    a = time.time()
+    game.start_self_play(mctsplayer, is_show=1)
+    print(time.time() - a)
     '''
     game.start_play(human, mctsplayer, 1, 2, 1, is_show=1)
 
