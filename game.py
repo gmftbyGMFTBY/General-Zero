@@ -83,7 +83,6 @@ class Board:
         self.map = [[0, 0, 0, 0, 0] for _ in range(5)]
         self.red_pieces = [1, 2, 3, 4, 5, 6]
         self.blue_pieces = [1, 2, 3, 4, 5, 6]
-
         if not red_pieces:
             red_pieces = [(0, 0, 3), (0, 1, 5), (0, 2, 6), (1, 0, 1), (1, 1, 4), (2, 0, 2)]
         if not blue_pieces:

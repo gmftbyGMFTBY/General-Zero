@@ -58,7 +58,7 @@ class TreeNode:
         """
         # Count visit.
         self._n_visits += 1
-        # Update Q, a running average of values for all visits.   wtf ??? this line is rigth but kind of wired !
+        # Update Q, a running average of values for all visits.
         self._Q += 1.0 * (leaf_value - self._Q) / self._n_visits
 
     def update_recursive(self, leaf_value):
@@ -221,13 +221,64 @@ class MCTSPlayer:
                     if dx == 3 and dy == 3: return move
                     elif dx == 3 and dy == 4: return move
                     elif dx == 4 and dy == 3: return move
+        '''            
+        if board.turn == 1:
+            # 一步之后对手可以无法被歼灭并且十分靠近我方终点并且走子概率很高
+            for move in moves:
+                bx, by, dx, dy = board.move_to_location(move)
+                if board.map[dx][dy] < 0:
+                    for deltax, deltay in [(-1, -1), (-1, 0), (0, -1)]:
+                        ddx = dx + deltax if dx + deltax >= 0 else 0
+                        ddy = dy + deltay if dy + deltay >= 0 else 0
+                        # 查询 ddx, ddy 该点是否为蓝棋的不可歼灭点
+                        flag = True
+                        for i in range(ddx + 1):
+                            for j in range(ddy + 1):
+                                if i == bx and j == by: continue
+                                if board.map[i][j] > 0:
+                                    flag = False
+                                    break
+                            if not flag: break
+                        if flag:
+                            # ddx, ddy 不可歼灭
+                            print("Hidden have to move has been activated !")
+                            return move
+        elif board.turn == 2:
+            # 一步之后我方可以无法被歼灭并且十分的靠近敌方终点并且走子概率很高
+            for move in moves:
+                bx, by, dx, dy = board.move_to_location(move)
+                if board.map[dx][dy] > 0:
+                    for deltax, deltay in [(1, 1), (1, 0), (0, 1)]:
+                        ddx = dx + deltax if dx + deltax <= 4 else 4
+                        ddy = dy + deltay if dy + deltay <= 4 else 4
+                        flag = True
+                        for i in range(ddx, 5):
+                            for j in range(ddy, 5):
+                                if i == bx and j == by: continue
+                                if board.map[i][j] < 0:
+                                    flag = False
+                                    break
+                            if not flag: break
+                        if flag:
+                            print("Hidden have to move has been activated !")
+                            return move
+        '''
 
         return None
 
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turns
-        board.get_point()
-        # print(board.point)
+        while True:
+            try:
+                point = int(input("Input point (1~6): "))
+                if point <= 0 or point > 6: raise Exception()
+                break
+            except KeyboardInterrupt:
+                exit(1)
+            except:
+                print('Please input the right point to move !')
+        board.get_point(point)
+        print(board.point)
         # ipdb.set_trace()
 
         # have to 
@@ -257,7 +308,11 @@ class MCTSPlayer:
         else:
             # with the default temp=1e-3, it is almost equivalent
             # to choosing the move with the highest prob
+
+            # 选择最大概率的走子方案
             move = np.random.choice(acts, p = probs)
+            # move = acts[np.argmax(probs)]
+
             # reset the root node
             # self.mcts.update_with_move(-1, -1)
             
