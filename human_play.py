@@ -51,7 +51,7 @@ def run():
     # log, the model for training 1500 is suck, maybe the value is not prepared and need to be
     # trained more times - 2018.7.11
     best_policy = PolicyValueNet(5, 5)
-    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 6000)
+    mctsplayer = MCTSPlayer(best_policy.policy_value_fn, c_puct = 5, n_playout = 10000)
     puremctsplayer = PURE(c_puct = 5, n_playout = 10000)
     human = Human()
     
@@ -75,6 +75,5 @@ def run():
     print(time.time() - a)
     '''
     game.start_play(human, mctsplayer, 1, 2, 1, is_show=1)
-
 if __name__ == "__main__":
     run()

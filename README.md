@@ -3,8 +3,6 @@
 >* Thanks for this repo: https://github.com/junxiaosong/AlphaZero_Gomoku
 >* Thanks for the author to answer my questions. 
 
----
-
 ### 1. Project Arch
 1. game.py
     * Class `Board`: 
