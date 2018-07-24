@@ -93,3 +93,14 @@ The format of the log file is defined by the CAAI, and can be found on this webs
 3. pure MCTS will be worst with more simulations, I think the reason is that more simulations can confuse the program.
 
    for pure MCTS, more simulations means making mistakes easiler.
+
+### 7. Getting Start
+
+```python
+# need to install the tensorflow==1.4
+python human_play.py
+
+# train to create the model
+python train.py
+```
+
