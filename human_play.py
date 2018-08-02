@@ -24,7 +24,6 @@ class Human:
         # get action must use the get point function
         try:
             # get the point from outside (not the program)
-            '''
             while True:
                 try:
                     point = int(input("Input point (1~6): "))
@@ -34,7 +33,7 @@ class Human:
                     exit(1)
                 except:
                     print('Please input the right point to move !')
-            '''
+            
             board.get_point()     # get the point for this turn
             print(board.get_avaiable_pieces())
             move = input('Your Move: ')

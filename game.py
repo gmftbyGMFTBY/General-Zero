@@ -284,14 +284,13 @@ class Game:
         # this function when the start_play end and write the log according to the new rule of the game
         filename = './chess_log/WTN-' + first_name + '-' + second_name + '-' + winner + '-' + '-'.join(time.asctime().split()) + '-' + '2018CCGC'
         with open(filename, 'w') as f:
-            f.write(filename)
-            f.write('\n')
-            f.write('R: ')
+            f.write('#[][place][][date][];\n')
+            f.write('R:')
             for x, y, index in self.board.mine_pos:
                 x, y = 5 - x, chr(65 + y)
                 f.write(y + str(x) + '-' + str(index) + ';')
             f.write('\n')
-            f.write('B: ')
+            f.write('B:')
             for x, y, index in self.board.oppo_pos:
                 x, y = 5 - x, chr(65 + y)
                 f.write(y + str(x) + '-' + str(index) + ';')

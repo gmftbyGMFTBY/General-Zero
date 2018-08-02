@@ -284,7 +284,6 @@ class MCTSPlayer:
 
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turns
-        '''
         while True:
             try:
                 point = int(input("Input point (1~6): "))
@@ -294,7 +293,7 @@ class MCTSPlayer:
                 exit(1)
             except:
                 print('Please input the right point to move !')
-        '''
+        
         board.get_point()
         print(board.point)
         # ipdb.set_trace()
