@@ -4,7 +4,7 @@
 
 import numpy as np
 from collections import deque
-import random, time
+import random, time, queue, threading
 
 class Board:
     def __init__(self):
@@ -191,6 +191,7 @@ class Board:
 class Game:
     def __init__(self):
         self.board = Board()
+        self.q = queue.Queue()
     
     def show(self):
         # terminal
@@ -218,6 +219,19 @@ class Game:
             # if self.board.turn == 1: print('-------------------\nRed player play ...')
             # else: print('-------------------\nBlue player play ...')
             player_in_turn = players[self.board.turn]
+            
+            # IF NOT THE ALPHAZERO, MULTITHREADING TO SIMULATION
+            if player_in_turn.name != 'alphazero':
+                # the human or the pure mcts play turn
+                alphaplayer = players[2 if player_in_turn.color == 1 else 1]
+                self.q.put(True)
+                cheating = threading.Thread(target = alphaplayer.mcts.cheating_move, \
+                        args = (self.q, self.board,))
+                cheating.start()
+            else:
+                # add the False flag into the threading queue
+                # to stop the auto simulations
+                self.q.put(False)
 
             # get_action must call the get_point function
             move = player_in_turn.get_action(self.board)    # the move is the integar

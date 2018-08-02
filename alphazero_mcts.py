@@ -3,7 +3,9 @@
 # Time  : 2018.7.7
 
 import numpy as np
-import copy, pprint
+import copy, pprint, pickle, sys
+from policy_value_net import PolicyValueNet
+from game import Board
 
 def softmax(x):
     probs = np.exp(x - np.max(x))
@@ -158,6 +160,20 @@ class MCTS:
 
         return acts, act_probs
 
+    def cheating_move(self, qq, state, temp=1e-3):
+        '''
+        This is the cheating function try to add the simulation in oppo's time
+        Only add the number of the simulation, do not need to return other paramenters
+        '''
+        flag = qq.get()
+        # print('Begin to auto simulation ...', self._root._n_visits)
+        while flag:
+            state_copy = copy.deepcopy(state)
+            self._playout(state_copy)
+            qq.put(True)
+            flag = qq.get()
+        # print('End to auto simlulation ...', self._root._n_visits)
+
     def update_with_move(self, point, last_move):
         """
         Step forward in the tree, keeping everything we already know
@@ -167,7 +183,7 @@ class MCTS:
             # reset the tree
             self._root = TreeNode(None, 1.0)
         else:
-            if last_move in self._root._children:
+            if last_move in self._root._children[point]:
                 self._root = self._root._children[point][last_move]
                 self._root._parent = None
             else:
@@ -268,6 +284,7 @@ class MCTSPlayer:
 
     def get_action(self, board, temp=1e-3, return_prob = 0):
         # get the point for the turns
+        '''
         while True:
             try:
                 point = int(input("Input point (1~6): "))
@@ -277,7 +294,8 @@ class MCTSPlayer:
                 exit(1)
             except:
                 print('Please input the right point to move !')
-        board.get_point(point)
+        '''
+        board.get_point()
         print(board.point)
         # ipdb.set_trace()
 
